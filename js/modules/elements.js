@@ -1,50 +1,14 @@
 /**
- * DOM Elements and Audio Management Module
- * 
- * This module is like the game's address book - it knows where to find every
- * button, display, and interactive element on the page. Instead of searching
- * for DOM elements every time we need them (which is slow and error-prone),
- * we find them once at startup and store references here.
- * 
- * Think of this as creating shortcuts to all the important parts of the HTML.
- * When other parts of the game need to update the score display or play a sound,
- * they can just grab the reference from here instead of hunting through the DOM.
- * 
- * We also handle audio initialization here because sound effects are closely
- * tied to DOM elements. By setting volume levels centrally, we ensure consistent
- * audio experience across the entire game.
- * 
- * Pro tip: If you're adding new HTML elements that the JavaScript needs to
- * interact with, add them to this elements object first!
- * 
+ * DOM element references and audio initialization for the game.
  * @fileoverview DOM element references and audio initialization
- * @author Game Development Team
+ * @author WebDevGuy
  * @version 1.0.0
  */
 
 /**
  * Central registry of all DOM elements used throughout the game.
- * 
- * This object is our one-stop shop for accessing any HTML element that the
- * JavaScript needs to interact with. By gathering all these references in one
- * place, we make the code more maintainable and performant.
- * 
- * Here's why this approach rocks:
- * - No more document.getElementById() calls scattered everywhere
- * - If an HTML ID changes, we only need to update it in one place
- * - Easy to see at a glance what elements the game depends on
- * - Better performance (we query the DOM once, not repeatedly)
- * 
- * The elements are organized by functionality:
- * - Game display elements (score, timer, hearts)
- * - Game board and shapes
- * - Modal dialogs and screens
- * - Control buttons and inputs
- * - Audio elements for sound effects
- * 
- * Some elements are set to null initially because they're created dynamically
- * during gameplay (like leaderboard tabs).
- * 
+ * References are gathered here for maintainability and performance.
+ *
  * @type {Object}
  * @property {HTMLElement} score - Displays the current score
  * @property {HTMLElement} attempts - Shows remaining attempts as hearts
@@ -86,6 +50,17 @@ export const elements = {
     shapeQuantityDisplay: document.getElementById('shape-quantity-display'),
     startGameBtn: document.getElementById('start-game-btn'),
 
+    // Wizard step containers
+    wizardStep1: document.getElementById('wizard-step-1'),
+    wizardStep2: document.getElementById('wizard-step-2'),
+    wizardStep3: document.getElementById('wizard-step-3'),
+
+    // Wizard navigation buttons
+    wizardNextBtn: document.getElementById('wizard-next-btn'),
+    wizardHighScoresBtn: document.getElementById('wizard-highscores-btn'),
+    wizardBackSettingsBtn: document.getElementById('wizard-back-settings-btn'),
+    wizardBackScoresBtn: document.getElementById('wizard-back-scores-btn'),
+
     // High scores and leaderboard
     highScoresList: document.getElementById('high-scores-list'),
 
@@ -108,38 +83,16 @@ export const elements = {
     gameoverSound: document.getElementById('gameover-sound'),
 
     // Game control buttons
-    quitButton: document.getElementById('quit-game-button')
+    quitButton: document.getElementById('quit-game-button'),
+    muteButton: document.getElementById('mute-button')
 };
 
 /**
- * Initializes the confetti canvas context for victory animations.
- * 
- * The confetti system uses HTML5 Canvas to create those satisfying particle
- * effects when players get a correct match. This function sets up the 2D
- * rendering context that we'll use to draw all those colorful rectangles
- * flying across the screen.
- * 
- * Why we need this function:
- * - Canvas contexts are expensive to create, so we do it once and reuse
- * - We can check if the canvas exists before trying to get its context
- * - Centralizes canvas setup logic in one place
- * 
- * @example
- * // Usually called during game initialization
- * const ctx = initializeConfettiContext();
- * if (ctx) {
- *   // Ready to draw confetti!
- *   ctx.fillStyle = '#FF6B6B';
- *   ctx.fillRect(x, y, width, height);
- * }
- * 
- * @function
- * @returns {CanvasRenderingContext2D|null} The 2D rendering context for confetti, or null if canvas not found
- * @throws {Error} If canvas element exists but context creation fails
+ * Initializes the confetti canvas 2D rendering context for victory animations.
+ * @returns {CanvasRenderingContext2D|null} The 2D rendering context, or null if canvas not found
  */
 export function initializeConfettiContext() {
     if (!elements.confettiCanvas) {
-        console.warn('Confetti canvas element not found');
         return null;
     }
 
@@ -152,32 +105,8 @@ export function initializeConfettiContext() {
 }
 
 /**
- * Configures audio settings for optimal game experience.
- * 
- * Audio feedback is crucial for game feel - it makes correct answers feel
- * rewarding and wrong answers feel appropriately disappointing. But nobody
- * wants their ears blown out by loud sound effects!
- * 
- * This function sets volume levels that we've carefully tested to be:
- * - Audible and engaging without being startling
- * - Balanced relative to each other (wrong sound slightly louder for feedback)
- * - Respectful of players who might be in quiet environments
- * 
- * The volume levels (0.0 to 1.0) were chosen through playtesting with various
- * devices and headphone types. Wrong sounds are slightly louder because
- * clear negative feedback is important for learning.
- * 
- * @example
- * // Called during game initialization
- * initAudioSettings();
- * 
- * // Now audio elements have appropriate volumes
- * elements.correctSound.play(); // Plays at 50% volume
- * elements.wrongSound.play();   // Plays at 70% volume
- * 
- * @function
+ * Configures audio volume levels for optimal game experience.
  * @returns {void}
- * @throws {Error} If audio elements are not found in the DOM
  */
 export function initAudioSettings() {
     try {
@@ -194,7 +123,6 @@ export function initAudioSettings() {
             elements.gameoverSound.volume = 0.8; // Prominent but not jarring
         }
 
-        console.log('Audio settings initialized successfully');
     } catch (error) {
         console.error('Failed to initialize audio settings:', error);
         // Don't throw - game should still work without audio

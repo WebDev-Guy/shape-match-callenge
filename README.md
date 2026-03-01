@@ -1,307 +1,251 @@
-# I Spy a Shape 🔷 🔺 ⭐
+# I Spy a Shape
 
-> An interactive educational game to help children learn geometric shapes through fun matching challenges.
+> An interactive educational game that helps children learn geometric shapes through fun matching challenges.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES6-yellow.svg)](https://www.ecma-international.org/ecma-262/)
 [![HTML5](https://img.shields.io/badge/HTML-5-orange.svg)](https://html.spec.whatwg.org/)
 [![CSS3](https://img.shields.io/badge/CSS-3-blue.svg)](https://www.w3.org/Style/CSS/)
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Overview](#overview)
-- [Game Configuration](#game-configuration)
+- [Why This Game Matters](#why-this-game-matters)
 - [Features](#features)
 - [Installation](#installation)
 - [How to Play](#how-to-play)
 - [Game Modes](#game-modes)
+- [Game Configuration](#game-configuration)
 - [Development](#development)
 - [Contributing](#contributing)
 - [License](#license)
 - [Acknowledgements](#acknowledgements)
-- [Recent Updates](#recent-updates)
 
-## 🔍 Overview
+## Overview
 
-I Spy a Shape is a web-based educational game designed to help children recognize and identify various geometric shapes. With multiple difficulty levels and game modes, it offers an engaging way for kids to learn shape recognition through interactive gameplay.
+I Spy a Shape is a browser-based educational game designed to help children recognize and identify geometric shapes. It offers multiple difficulty levels and game modes so kids can learn at their own pace and keep coming back as their skills grow.
 
-Built using vanilla JavaScript with ES6 modules, HTML5, and CSS3, this game runs entirely in the browser with a minimal local server requirement for the ES6 module functionality.
+The game is built with vanilla JavaScript (ES6 modules), HTML5, and CSS3. There are no frameworks or external dependencies to install -- just serve the files and play.
 
-Note: This project was built entirely using prompt templates and Github Copilot Agent (Claude 3.7)
+## Why This Game Matters
 
-## ⚙️ Game Configuration
+Shape recognition is one of the foundational skills in early childhood development. When young children learn to identify and distinguish shapes, they are building the groundwork for a surprisingly wide range of abilities that extend well beyond geometry class.
 
-You can customize various game behaviors by modifying the configuration values in the `js/modules/config.js` file. Here's a breakdown of the available configuration options:
+### Visual Discrimination and Spatial Awareness
 
-### Basic Configuration
+Picking out a target shape from a scattered board of options trains a child's ability to notice differences, compare forms, and understand how objects relate to each other in space. These are the same skills that help kids recognize letters (telling a "b" from a "d"), read maps, and eventually understand graphs and diagrams. The game's increasing difficulty -- from a handful of basic shapes with distinct colors up to dozens of rotated, similarly colored, moving shapes -- gradually stretches these abilities in a way that feels like play rather than practice.
 
-| Config Property | Description | Default Value |
-|----------------|-------------|---------------|
-| `maxShapes` | Maximum number of shapes to display at once | 10 |
-| `minShapes` | Minimum number of shapes to display | 5 |
-| `maxAttempts` | Number of attempts allowed before game over | 3 |
-| `successDelay` | Delay in milliseconds before showing new shapes after a successful match | 800 |
-| `mode` | Default game mode ('classic' or 'timed') | 'classic' |
+### Cognitive Flexibility and Problem Solving
 
-### Shape Settings
+Each round asks the child to hold a target shape in mind and scan the board for a match, which exercises working memory and focused attention. In medium and hard modes, they also need to match color alongside shape, which means juggling two criteria at once. This kind of multi-attribute matching is an early form of the logical thinking that shows up later in math, science, and everyday decision-making.
 
-The game includes different sets of shapes based on difficulty level:
+### Fine Motor Skills and Hand-Eye Coordination
 
-- `basicShapes`: Shapes available in all difficulty levels (circle, square, triangle, rectangle)
-- `mediumShapes`: Additional shapes in medium and hard difficulties (pentagon, hexagon, oval, diamond)
-- `hardShapes`: Shapes only available in hard difficulty (octagon, star, heart, trapezoid)
+Clicking (or tapping) on the right shape among many options requires precise control. In hard mode, shapes drift around the screen, so children need to track a moving target and time their click. This is a low-pressure way to develop the hand-eye coordination that supports handwriting, drawing, and using tools.
 
-### Color Settings
+### Confidence and Persistence
 
-The game uses a WCAG compliant color palette stored in the `colors` array. You can modify these colors to create custom themes while maintaining accessibility standards.
+The game is designed to encourage rather than punish. Easy mode is forgiving -- shapes are few, colors are distinct, and attempts reset after each correct match. Confetti bursts and sound effects celebrate every success. When a child does make a mistake, the shake animation and gentle heart-loss feedback teach them that getting it wrong is part of the process, not the end of the game. Moving from easy to medium to hard gives kids a natural sense of progression and accomplishment.
 
-### Difficulty Settings
+### Math Readiness
 
-Each difficulty level has customizable parameters:
+Geometry is one of the five major strands of early mathematics, alongside counting, patterns, measurement, and data. Children who can fluently name and describe shapes tend to perform better in math overall because shape recognition reinforces classification, comparison, and the language of attributes ("this one has more sides," "that one is round"). I Spy a Shape introduces twelve distinct shapes across three tiers, giving children a vocabulary of geometric forms that lines up with what they will encounter in kindergarten and early elementary curricula.
 
-#### Easy Mode
-```javascript
-easy: {
-    shapesCount: { min: 4, max: 8 },     // Range of shapes to display
-    timeLimit: 90,                        // Time limit in seconds (for timed mode)
-    timeBonus: { correct: 5, colorMatch: 8 }, // Time added for correct answers
-    timePenalty: 3,                       // Time deducted for wrong answers
-    distinctColors: true,                 // Whether shapes have unique colors
-    rotationRange: { min: 0, max: 45 },   // Shape rotation angles
-    movementSpeed: { min: 0, max: 0 }     // No movement in easy mode
-}
-```
+### Classroom and Home Use
 
-#### Medium Mode
-```javascript
-medium: {
-    shapesCount: { min: 6, max: 12 },
-    timeLimit: 60,
-    timeBonus: { correct: 3, colorMatch: 5 },
-    timePenalty: 5,
-    distinctColors: false,
-    rotationRange: { min: 0, max: 180 },
-    movementSpeed: { min: 0, max: 0 }     // No movement in medium mode
-}
-```
+The mute button makes the game suitable for classroom environments where sound would be a distraction, while the leaderboard and player name system let siblings or classmates take turns and compare scores. Because the game runs entirely in the browser with no accounts or data collection, it is straightforward for parents and teachers to set up and safe for children to use independently.
 
-#### Hard Mode
-```javascript
-hard: {
-    shapesCount: { min: 10, max: 18 },
-    timeLimit: 45,
-    timeBonus: { correct: 2, colorMatch: 3 },
-    timePenalty: 7,
-    distinctColors: false,
-    rotationRange: { min: 0, max: 359 },
-    movementSpeed: { min: 0.05, max: 0.15 } // Shapes move in hard mode
-}
-```
+## Features
 
-### Visual Effects
+- **12 shapes** across three difficulty tiers, from circles and squares up to stars, hearts, and trapezoids
+- **Three difficulty levels** -- Easy, Medium, and Hard -- with distinct rules for matching, rotation, movement, and color
+- **Two game modes** -- Classic (attempt-based) and Timed (race the clock with time bonuses)
+- **Adjustable shape count** so you can control how busy the board gets
+- **Sound effects** for correct matches, mistakes, and game over, with a mute toggle for quiet environments
+- **Confetti animations** that burst from the click location on every correct match
+- **Responsive design** that works on desktops, tablets, and phones
+- **Accessibility support** including ARIA live regions for screen readers and a WCAG-compliant color palette
+- **Local leaderboards** stored in the browser, separated by game mode
+- **No dependencies** -- pure vanilla JavaScript, HTML, and CSS
 
-Confetti animation settings can be customized:
+## Installation
 
-```javascript
-confetti: {
-    particleCount: 100,       // Number of confetti particles
-    gravity: 0.2,             // How fast particles fall
-    spread: 70,               // How wide particles spread
-    colors: ['#FF6B6B', ...], // Particle colors
-    velocityFactor: 0.7       // Speed of particle movement
-}
-```
+The game uses ES6 modules, so it needs to be served over HTTP rather than opened directly as a file. Here are a few ways to get it running.
 
-### How to Modify Configuration
+### Option 1: npm start
 
-To modify any of these settings:
+If you have Node.js installed, this is the quickest path.
 
-1. Open the `js/modules/config.js` file in a text editor
-2. Locate the `gameConfig` object
-3. Change the desired values
-4. Save the file and refresh the game in your browser
-
-Example: To make the game easier, you could increase the `maxAttempts` value or extend the time limits in each difficulty level.
-
-## ✨ Features
-
-- **10+ Different Shapes**: From basic shapes like circles and squares to more advanced ones like trapezoids and hearts
-- **Multiple Difficulty Levels**: Easy, Medium, and Hard modes with increasing complexity
-- **Various Game Modes**: Classic, Timed, Moving Shapes, and customizable Shape Quantity
-- **Scoring System**: Track progress and compete for high scores
-- **Audio Feedback**: Sound effects for correct and incorrect answers
-- **Visual Effects**: Confetti animations for successful matches
-- **Responsive Design**: Works on desktops, tablets, and mobile devices
-- **Accessibility Features**: ARIA attributes and WCAG compliant color schemes
-- **Local Leaderboards**: Save your high scores across different game modes
-- **Modular Code Structure**: ES6 modules for better organization and maintainability
-
-## 💻 Installation
-
-As the game uses ES6 modules, a local development server is required to run the application:
-
-### Option 1: Using VS Code and Live Server (Recommended)
-
-1. Clone this repository:
 ```bash
-git clone https://github.com/webdev-guy/shape-identification-game.git
+git clone https://github.com/webdev-guy/i-spy-a-shape.git
+cd i-spy-a-shape
+npm start
 ```
 
-2. Navigate to the project directory:
+This runs `npx http-server` on port 8000 and opens the game in your browser.
+
+### Option 2: VS Code Live Server
+
+1. Clone the repository and open it in VS Code.
+2. Install the [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension if you don't have it.
+3. Right-click `index.html` and select "Open with Live Server."
+
+### Option 3: Python
+
 ```bash
-cd shape-identification-game
-```
-
-3. Open the project in VS Code:
-```bash
-code .
-```
-
-4. Install the Live Server extension in VS Code if you don't have it already.
-
-5. Right-click on `index.html` and select "Open with Live Server".
-
-6. The game will open in your default browser.
-
-### Option 2: Using Python's built-in HTTP server
-
-1. Clone this repository as shown above.
-
-2. Navigate to the project directory.
-
-3. Start a Python HTTP server:
-```bash
-# For Python 3.x
+# Python 3
 python -m http.server
 
-# For Python 2.x
+# Python 2
 python -m SimpleHTTPServer
 ```
 
-4. Open your browser and go to `http://localhost:8000`.
+Then open `http://localhost:8000` in your browser.
 
-### Option 3: Using Node.js http-server
+> Opening `index.html` directly as a file will not work. Browsers block ES6 module imports over the `file://` protocol.
 
-1. Install http-server globally if you don't have it:
-```bash
-npm install -g http-server
-```
+## How to Play
 
-2. Navigate to the project directory.
+1. Enter your name on the setup screen.
+2. Pick a difficulty level -- Easy, Medium, or Hard. Hover over each option to see what the rules are.
+3. Choose a game mode -- Classic or Timed.
+4. Adjust the number of shapes if you want more or fewer on the board.
+5. Hit Start Game.
+6. A target shape appears in the banner at the top of the screen. Find and click the matching shape on the board.
+7. In Easy mode, only the shape needs to match. In Medium and Hard, both the shape and color must match.
+8. Score points for each correct match and try to land on the leaderboard.
 
-3. Start the server:
-```bash
-http-server
-```
+## Game Modes
 
-4. Open your browser and go to the URL shown in the terminal.
-
-> **Note**: Simply opening the HTML file directly will not work due to ES6 module security restrictions in browsers.
-
-## 🎯 How to Play
-
-1. Select a difficulty level (Easy, Medium, Hard)
-2. Choose a game mode (Classic, Timed, Moving Shapes, Shape Quantity)
-3. A target shape will appear at the top of the screen
-4. Click on the matching shape among the options displayed on the screen
-5. Score points for correct matches
-6. Avoid three consecutive incorrect answers to prevent game over
-7. Try to beat your high score!
-
-## 🎲 Game Modes
-
-| Mode | Description |
+| Mode | How it works |
 |------|-------------|
-| **Classic** | Standard gameplay. Match shapes to earn points. |
-| **Timed** | Race against the clock! Correct matches add time, wrong answers subtract time. |
-| **Moving Shapes** | Shapes bounce around the screen, increasing the challenge. |
-| **Shape Quantity** | Customize how many shapes appear on screen at once. |
+| **Classic** | Match shapes to earn points. You get three wrong attempts before the game ends. In Easy and Medium, attempts reset after each correct match. In Hard, three wrong clicks total and you are done. |
+| **Timed** | Start with a countdown timer. Correct matches add time, wrong clicks subtract it. Matching both shape and color gives a bonus. The round ends when the timer hits zero. |
 
-## 🛠️ Development
+Hard mode adds an extra twist in both modes: shapes slowly drift around the board, so you need to track and click a moving target.
 
-This project is built with:
+## Game Configuration
 
-- **HTML5** for structure
-- **CSS3** for styling and animations
-- **Vanilla JavaScript** with ES6 modules for game logic
+All game settings live in `js/modules/config.js`. The configuration is frozen at startup to prevent accidental changes during gameplay, but you can edit the file to adjust the game for your needs.
+
+### Basic Settings
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| `maxShapes` | Maximum shapes on screen | 10 |
+| `minShapes` | Minimum shapes on screen | 5 |
+| `maxAttempts` | Wrong clicks before game over | 3 |
+| `successDelay` | Pause between correct match and next round (ms) | 800 |
+
+### Difficulty Levels
+
+| Setting | Easy | Medium | Hard |
+|---------|------|--------|------|
+| Shape count | 4-8 | 6-12 | 10-18 |
+| Time limit (timed mode) | 90s | 60s | 45s |
+| Color matching required | No | Yes | Yes |
+| Distinct colors | Yes | No | No |
+| Max rotation | 45 degrees | 180 degrees | 359 degrees |
+| Shape movement | None | None | Slow drift |
+
+### Available Shapes
+
+- **All levels:** circle, square, triangle, rectangle
+- **Medium and Hard:** pentagon, hexagon, oval, diamond
+- **Hard only:** octagon, star, heart, trapezoid
+
+### Confetti Settings
+
+```javascript
+confetti: {
+    particleCount: 100,
+    gravity: 0.2,
+    spread: 70,
+    velocityFactor: 0.7
+}
+```
+
+To modify any setting, edit `config.js`, save, and refresh the game in your browser.
+
+## Development
+
+### Tech Stack
+
+- HTML5 for structure
+- CSS3 for styling and animations (Fredoka font, CSS custom properties, keyframe animations)
+- Vanilla JavaScript with ES6 modules for all game logic
 
 ### Project Structure
 
 ```
-shape-identification-game/
-├── index.html          # Main HTML structure
-├── css/
-│   └── styles.css      # All styling and animations
-├── js/
-│   ├── game.js         # Main JS file that imports modules
-│   └── modules/
-│       ├── config.js       # Game configuration settings
-│       ├── elements.js     # DOM element references
-│       ├── events.js       # Event handlers and UI interactions
-│       ├── gameLogic.js    # Core game mechanics
-│       ├── gameState.js    # Game state management
-│       ├── rendering.js    # Shape rendering functions
-│       └── utils.js        # Utility functions
-├── .vscode/            # VS Code configuration
-│   └── settings.json   # Live Server settings
-├── audio/              # Sound effects
-│   ├── correct.mp3     # Played on correct match
-│   ├── wrong.mp3       # Played on incorrect match
-│   └── gameover.mp3    # Played when game ends
-└── README.md           # This documentation
+i-spy-a-shape/
+  index.html              Main page
+  package.json            Project metadata and start script
+  css/
+    styles.css            All styling and animations
+  js/
+    game.js               Entry point, wires up modules on page load
+    modules/
+      config.js           Game settings and difficulty configuration
+      elements.js         Cached DOM references and audio setup
+      events.js           Event listeners and UI interactions
+      gameLogic.js        Core mechanics -- shape generation, scoring, timers, movement
+      gameState.js        Central state object and reset logic
+      rendering.js        SVG shape creation and confetti animation
+      utils.js            Small helpers -- random numbers, shuffling, screen reader announcements
+  audio/
+    correct.mp3           Correct match sound
+    wrong.mp3             Wrong match sound
+    gameover.mp3          Game over sound
+  images/
+    mascot.png            Logo and mascot image
 ```
 
-### Module Responsibilities
+### Architecture
 
-- **config.js**: Contains all game configuration settings like colors, shapes, difficulties
-- **gameState.js**: Maintains the game state object and reset functionality
-- **elements.js**: Stores references to DOM elements and initializes audio settings
-- **utils.js**: Houses utility functions like random number generation
-- **rendering.js**: Handles all shape rendering and canvas operations
-- **gameLogic.js**: Contains core game mechanics like scoring and game flow
-- **events.js**: Manages all event listeners and UI interactions
-- **game.js**: Main entry point that orchestrates the modules
+The codebase follows a straightforward module pattern. Each file has a single responsibility, and they communicate through imports and a shared `gameState` object.
 
-## 🤝 Contributing
+- **config.js** is the single source of truth for all game parameters. It is deep-frozen at startup.
+- **gameState.js** holds all runtime data (score, attempts, shapes on the board, timer state). The `resetGameState` function clears temporary data while preserving player preferences.
+- **elements.js** caches DOM references once at startup so the rest of the code never has to call `getElementById` repeatedly.
+- **rendering.js** builds shapes as SVG elements inside positioned divs and handles the confetti particle system on an HTML5 canvas.
+- **gameLogic.js** is the largest module. It handles shape generation with grid-based positioning, match checking, scoring, the timer, hard-mode movement animation, and high score management via localStorage.
+- **events.js** wires up all buttons and controls, manages modals, and handles window resize by proportionally repositioning shapes.
+- **utils.js** contains pure helper functions with no side effects.
 
-Contributions are welcome! Here's how you can help:
+### Running Locally
 
-1. Fork the repository
-2. Create your feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add some amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
+```bash
+npm start
+```
 
-Please ensure your code follows the existing style and includes appropriate comments.
+Or use any static HTTP server as described in the Installation section.
 
-### Development Roadmap
+## Contributing
 
-Future enhancements planned:
-- [ ] Add more complex shapes
-- [ ] Implement a tutorial mode
-- [ ] Add multiplayer functionality
-- [ ] Create a progressive learning mode
+Contributions are welcome. Here is the general flow:
 
-## 📄 License
+1. Fork the repository.
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Make your changes and commit them.
+4. Push to your fork and open a pull request.
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Please follow the existing code style and keep changes focused. If you are planning something large, open an issue first to discuss the approach.
 
-## 👏 Acknowledgements
+### Ideas for Future Work
 
-- Font Awesome for icons
+- Tutorial or guided mode for first-time players
+- Additional shape sets (3D shapes, arrows, crescents)
+- Multiplayer or turn-based mode
+- Progressive difficulty that adapts to the player's performance
+- Keyboard navigation for shape selection
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Acknowledgements
+
 - Sound effects from [Freesound.org](https://freesound.org)
-- Inspiration from educational psychology research on shape recognition in early childhood development
-
-## 🆕 Recent Updates
-
-- **Modular JavaScript Structure**: Refactored the codebase into ES6 modules for better organization and maintainability
-- **Module System Support**: Added proper module loading with type="module" in HTML
-- **Fixed Dependencies**: Resolved circular dependencies between modules
-- **Live Server Configuration**: Added .vscode settings for consistent development environment
-- **Fixed Encoding Issues**: Addressed character encoding problems for better compatibility
-- **Dynamic Tooltips**: Tooltips now update based on the selected game mode
-- **Improved Leaderboard**: Redesigned with modern toggle buttons and better alignment
-- **Condensed UI**: Game options have been streamlined for better space utilization
-- **Enhanced Diamond Shape**: Improved appearance to look more like a true diamond
-- **Accessibility Improvements**: Enhanced with ARIA attributes for better screen reader support
-- **Game Controls**: Added quit button functionality during gameplay
+- [Fredoka](https://fonts.google.com/specimen/Fredoka) font from Google Fonts
+- Inspired by educational research on shape recognition in early childhood development

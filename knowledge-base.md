@@ -1,102 +1,77 @@
-# I Spy a Shape - Knowledge Base
+# I Spy a Shape -- Knowledge Base
 
 ## Project Overview
-This is a web-based educational game designed to help kids learn and identify geometric shapes. The game will run locally on a computer without requiring a server.
+
+A browser-based educational game that helps children learn and identify geometric shapes through interactive matching challenges. Built entirely with vanilla web technologies and designed to run from any static HTTP server with no backend or external dependencies.
 
 ## Technologies
+
 - HTML5
-- CSS3
-- Vanilla JavaScript (no external libraries or frameworks)
-- ES6 Modules
+- CSS3 (custom properties, keyframe animations, responsive media queries)
+- Vanilla JavaScript with ES6 modules
+- SVG for shape rendering
+- HTML5 Canvas for confetti particle effects
 
-## Key Features
+## Game Mechanics
 
-1. **Shape Matching Mechanic**
-   - One target shape will be displayed at the top of the screen
-   - Multiple random shapes will be generated and placed randomly on the screen
-   - User must click on the shape that matches the target shape
+1. **Shape Matching** -- A target shape is shown at the top of the screen. The player clicks the matching shape from a scattered board. In Easy mode, only the shape type matters. In Medium and Hard, both shape and color must match.
 
-2. **Random Shape Generation**
-   - Shapes will include circles, squares, triangles, rectangles, etc.
-   - Shapes will have random colors
-   - Shapes will have random sizes
-   - Shapes can be randomly rotated
+2. **Shape Generation** -- Shapes are positioned using a grid-based algorithm that prevents clustering and guarantees at least one correct match is always present on the board.
 
-3. **Feedback System**
-   - Correct match: Display "GREAT JOB!" and generate a new set of shapes
-   - Incorrect match: Display "Try again"
-   - Three consecutive incorrect attempts: Game over with a "try again" option
+3. **Difficulty Progression**
+   - Easy: 4-8 basic shapes, distinct colors, minimal rotation, 3 attempts per round (reset on correct match)
+   - Medium: 6-12 shapes (basic + intermediate), color matching required, more rotation, 3 attempts per round (reset on correct match)
+   - Hard: 10-18 shapes (all types), color matching required, full rotation, shapes drift around the screen, 3 attempts total (no reset)
 
-4. **Score Tracking**
-   - Keep count of successful matches
-   - Reset score when the game ends and is restarted
+4. **Game Modes**
+   - Classic: Attempt-based. Lose all attempts and the game ends.
+   - Timed: Countdown timer. Correct matches add time, wrong clicks subtract it. Color matches give bonus time.
 
-5. **Difficulty Levels**
-   - Easy: Fewer shapes, more time, distinct colors
-   - Medium: More shapes, standard time, varied colors
-   - Hard: Many shapes, less time, similar colors, more rotation
+5. **Scoring and Leaderboards** -- Scores are stored in localStorage, separated by game mode. Top 10 scores are shown in a tabbed leaderboard on the setup screen.
 
-6. **Sound Effects**
-   - Correct answer sound
-   - Wrong answer sound
-   - Game over sound
+6. **Sound and Visual Feedback** -- Correct matches trigger a confetti burst and sound effect. Wrong clicks shake the shape and play an error sound. A mute toggle is available for quiet environments.
 
-7. **Visual Animations**
-   - Confetti animation for correct answers, starting at the click location
-   - Confetti should fly up and then fall with gravity until off-screen
+## Available Shapes
 
-8. **Game Modes**
-   - Classic Mode: Standard gameplay
-   - Timed Mode: Race against the clock
-     - Correct shape matches add time to the countdown
-     - Matching both shape AND color adds bonus time
-     - Wrong clicks decrease remaining time
-   - Moving Shapes Mode: Shapes bounce around the screen in hard difficulty
-   - Shape Quantity Mode: Customize number of shapes on screen
+- Basic (all levels): circle, square, triangle, rectangle
+- Intermediate (medium and hard): pentagon, hexagon, oval, diamond
+- Advanced (hard only): octagon, star, heart, trapezoid
 
-9. **User Profiles**
-   - Store player names
-   - Track and display high scores for each difficulty and game mode
-
-10. **Shape Implementations**
-    - Basic Shapes: circle, square, triangle, rectangle
-    - Medium Difficulty: pentagon, hexagon, oval, diamond
-      - Diamond shape uses custom clip-path for true diamond appearance (elongated vertically)
-    - Hard Difficulty: octagon, star, heart, trapezoid
-
-## Design Constraints
-- Standalone web application (no server-side components)
-- Responsive design to work on different screen sizes
-- Modular code structure with separation of concerns
-- WCAG compliant color schemes for accessibility
+All shapes are rendered as SVG elements for crisp scaling at any size.
 
 ## Code Organization
-- **HTML (index.html)**: Main structure and layout
-- **CSS (styles.css)**: Visual styling and animations
-- **JavaScript**:
-  - **game.js**: Main orchestrator that imports all modules
-  - **modules/config.js**: Game configuration settings
-  - **modules/gameState.js**: Game state management
-  - **modules/elements.js**: DOM element references
-  - **modules/utils.js**: Utility functions
-  - **modules/rendering.js**: Shape rendering functions
-  - **modules/gameLogic.js**: Core game mechanics
-  - **modules/events.js**: Event listeners and UI interactions
-- **Audio Files**: Sound effects for game interactions
 
-## Recent Updates
-- Modularized JavaScript code into separate ES6 modules for better organization and maintainability
-- Added support for ES6 modules using type="module" in HTML
-- Fixed circular dependencies between modules
-- Improved diamond shape appearance to look more like a true diamond rather than a rotated square
-- Enhanced accessibility features with ARIA attributes
-- Added quit button during gameplay
-- Implemented leaderboard tabs for different game modes
-- Improved leaderboard design with horizontal layout for header and toggle buttons
-- Removed redundant header for high scores section
-- Condensed game options for better space utilization
-- Improved modal sizing with fixed height and proper padding
-- Fixed tooltips to show relevant information based on game mode
-- Added Live Server configuration for consistent development
-- Fixed file encoding issues for better compatibility
+```
+js/
+  game.js               Entry point. Initializes listeners, audio, confetti canvas, and shows setup modal.
+  modules/
+    config.js            All game settings in a single frozen object. Includes a DEBUG flag.
+    gameState.js         Central state object and reset function. Clears timers and animation frames on reset.
+    elements.js          Cached DOM references and audio volume initialization.
+    utils.js             Pure helpers: random selection, shuffling, capitalize, screen reader announcements.
+    rendering.js         SVG shape factory, game board rendering, confetti particle system.
+    gameLogic.js         Shape generation, match checking, scoring, timer, movement animation, high scores.
+    events.js            All event listeners, modal management, difficulty/mode selection, resize handling.
+```
 
+## Design Decisions
+
+- **No frameworks** -- Keeps the project simple, dependency-free, and easy for contributors to understand.
+- **ES6 modules** -- Enforces separation of concerns. Requires an HTTP server (browsers block module imports over file://).
+- **Frozen config** -- `gameConfig` is deep-frozen at startup to prevent accidental runtime mutation.
+- **Grid-based positioning** -- Shapes are placed in shuffled grid cells rather than purely random coordinates, which avoids clustering and ensures shapes are spread across the board.
+- **Proportional resize** -- When the window is resized during a game, shapes are repositioned proportionally rather than regenerated, preserving round progress.
+- **SVG over clip-path** -- Shapes were migrated from CSS clip-paths to inline SVG for better cross-browser support and crisp rendering at any scale.
+- **localStorage for scores** -- Simple, no-backend persistence. Scores are keyed by game mode.
+
+## Accessibility
+
+- WCAG-compliant color palette tested with colorblind simulators
+- ARIA live regions for screen reader announcements (score changes, game events)
+- Keyboard-accessible buttons and controls
+- Screen-reader-only CSS class for hidden announcements
+- Semantic HTML with proper heading hierarchy
+
+## Configuration
+
+All tuneable values live in `config.js`. Key settings include shape counts per difficulty, time limits and bonuses, rotation ranges, movement speeds, color palette, and confetti particle parameters. See the README for a full reference table.

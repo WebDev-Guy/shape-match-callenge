@@ -276,6 +276,32 @@ header {
     margin-left: 5px;
 }
 
+/* Mute button styling - fixed bottom right */
+#mute-button {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 1000;
+    padding: 10px 14px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 2px solid #6357a1;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.4rem;
+    line-height: 1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s;
+}
+
+#mute-button:hover {
+    background-color: rgba(255, 255, 255, 1);
+    transform: scale(1.1);
+}
+
+#mute-button.muted {
+    opacity: 0.6;
+}
+
 /* Stop game button styling */
 #quit-game-button {
     padding: 8px 15px;
@@ -403,8 +429,85 @@ header {
     width: 90%;
     max-width: 600px;
     max-height: calc(100vh - 60px);
-    overflow-y: auto;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    overflow: visible;
+}
+
+/* Wizard Step Styles */
+.wizard-step {
+    display: none;
+    animation: wizardFadeIn 0.3s ease-out;
+}
+
+.wizard-step.active {
+    display: block;
+}
+
+@keyframes wizardFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Wizard Navigation */
+.wizard-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.wizard-nav-split {
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.wizard-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.wizard-btn:hover {
+    transform: translateY(-1px);
+}
+
+.wizard-btn:active {
+    transform: translateY(0);
+}
+
+.wizard-btn-primary {
+    background-color: #3b82f6;
+    color: white;
+    width: 100%;
+}
+
+.wizard-btn-primary:hover {
+    background-color: #2563eb;
+}
+
+.wizard-btn-secondary {
+    background-color: transparent;
+    color: #6b7280;
+    border: 2px solid #d1d5db;
+    width: 100%;
+}
+
+.wizard-btn-secondary:hover {
+    background-color: #f3f4f6;
+    color: #4b5563;
+}
+
+.wizard-btn-back {
+    background-color: #e5e7eb;
+    color: #374151;
+}
+
+.wizard-btn-back:hover {
+    background-color: #d1d5db;
 }
 
 .modal-content h2 {
@@ -570,17 +673,20 @@ header {
 /* Start Game Button */
 #start-game-btn {
     display: block;
-    width: 100%;
-    padding: 15px;
+    padding: 12px 24px;
     background-color: #16a34a;
     color: white;
     border: none;
     border-radius: 8px;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     cursor: pointer;
-    margin: 20px 0;
-    transition: background-color 0.3s;
+    margin: 0;
+    transition: background-color 0.3s, transform 0.1s;
     font-weight: bold;
+}
+
+#start-game-btn:active {
+    transform: translateY(0);
 }
 
 #start-game-btn:hover {
@@ -589,9 +695,8 @@ header {
 
 /* High Scores Section */
 .high-scores-section {
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #e5e7eb;
+    margin-top: 0;
+    padding-top: 0;
 }
 
 /* Leaderboard Layout */
@@ -644,7 +749,7 @@ header {
 
 /* High Scores List */
 #high-scores-list {
-    max-height: 200px;
+    max-height: 50vh;
     overflow-y: auto;
     margin-top: 10px;
     border-radius: 8px;

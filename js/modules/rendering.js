@@ -1,26 +1,7 @@
 /**
- * Shape Rendering and Visual Effects Module
- * 
- * Welcome to the art department of our game! This module is responsible for
- * bringing all the colorful shapes to life on screen. Think of it as a combination
- * of a shape factory and a graphics studio - it knows how to create every type
- * of shape and make them look beautiful.
- * 
- * We use SVG (Scalable Vector Graphics) for rendering shapes because:
- * - They look crisp at any size (perfect for responsive design)
- * - They're lightweight and performant
- * - Easy to style with colors and borders
- * - Accessible to screen readers
- * 
- * The rendering system is designed to be flexible and maintainable. Adding a
- * new shape is as simple as adding a new case to the switch statement with
- * the appropriate SVG path or element.
- * 
- * This module also handles the confetti animation system - because what's the
- * point of getting answers right if you don't get a celebration?
- * 
- * @fileoverview Shape rendering, game board management, and visual effects
- * @author Game Development Team
+ * Shape rendering, game board management, and visual effects.
+ * @fileoverview Renders SVG shapes, manages the game board, and handles confetti animations.
+ * @author WebDevGuy
  * @version 1.0.0
  */
 
@@ -31,27 +12,7 @@ import { gameConfig } from './config.js';
 import { handleShapeClick } from './gameLogic.js';
 
 /**
- * Clears all shapes from the game board.
- * 
- * This function is like hitting the reset button on the game board. It removes
- * every shape element from the DOM and clears the shapes array in our game state.
- * We call this whenever we need a fresh start: new rounds, restarts, or when
- * returning to the main menu.
- * 
- * The function is thorough but gentle - it removes elements one by one rather
- * than using innerHTML = '' because that can sometimes cause memory leaks with
- * event listeners in some browsers.
- * 
- * @example
- * // Starting a new round
- * clearGameBoard();
- * generateNewShapes();
- * 
- * // Returning to main menu
- * clearGameBoard();
- * showSetupModal();
- * 
- * @function
+ * Clears all shapes from the game board and resets the shapes array.
  * @returns {void}
  */
 export function clearGameBoard() {
@@ -63,32 +24,11 @@ export function clearGameBoard() {
     // Clear the shapes array in game state
     gameState.shapes = [];
 
-    console.log("Game board cleared");
 }
 
 /**
  * Creates and displays the target shape that players need to find.
- * 
- * The target shape is like the "wanted poster" at the top of the screen - it
- * shows players exactly what they're looking for. This function creates a
- * special version of the shape that's consistently sized and positioned.
- * 
- * Why we need a separate function for target shapes:
- * - Target shapes have a fixed size (80px) for consistency
- * - They're positioned differently (centered in their container)
- * - They don't have click handlers (you can't click the target!)
- * - They need special styling to distinguish them from game shapes
- * 
- * The function also stores the target color in gameState for later reference
- * when checking if player clicks are correct.
- * 
- * @example
- * // Create a target circle for players to find
- * createTargetShape('circle');
- * 
- * // Now gameState.targetShape === 'circle' and gameState.targetColor is set
- * 
- * @function
+ * Selects a random color, renders the shape at a fixed size, and stores it in gameState.
  * @param {string} shapeType - The type of shape to create as target ('circle', 'square', etc.)
  * @returns {HTMLElement} The created target shape element
  * @throws {Error} If shapeType is not a valid shape name
@@ -124,46 +64,15 @@ export function createTargetShape(shapeType) {
     // Add the target shape to the target area
     elements.targetShape.appendChild(targetElement);
 
-    console.log(`Created target shape: ${shapeType}, color: ${gameState.targetColor}`);
-
     return targetElement;
 }
 
 /**
  * Creates a complete shape DOM element with SVG rendering.
- * 
- * This is the heart of our shape rendering system! This function is like a
- * skilled craftsperson who can make any type of shape you ask for. Give it
- * a shape type, color, and size, and it returns a beautiful, interactive
- * DOM element ready to be placed on the game board.
- * 
- * The function handles responsive design by adjusting sizes based on screen
- * width - shapes get bigger on large screens and smaller on mobile devices.
- * This ensures the game feels natural on any device.
- * 
- * Here's how the magic works:
- * 1. Create a container div for positioning and styling
- * 2. Create an SVG element for crisp, scalable graphics
- * 3. Generate the specific shape path/element based on type
- * 4. Apply colors, borders, and styling
- * 5. Package it all up in a clickable container
- * 
- * Each shape type has carefully crafted SVG coordinates that make it look
- * just right. The diamond shape is particularly special - it uses a custom
- * approach to look like a real gem rather than just a rotated square.
- * 
- * @example
- * // Create a medium red circle
- * const circle = createShapeElement('circle', '#FF6B6B', 80);
- * gameBoard.appendChild(circle);
- * 
- * // Create a small blue triangle for mobile
- * const triangle = createShapeElement('triangle', '#4ECDC4', 50);
- * 
- * @function
+ * Handles responsive sizing and supports all game shape types.
  * @param {string} type - Shape type ('circle', 'square', 'triangle', etc.)
  * @param {string} color - Hex color code for the shape fill
- * @param {number} size - Base size in pixels (will be adjusted for responsive design)
+ * @param {number} size - Base size in pixels (adjusted for responsive design)
  * @returns {HTMLElement} Complete DOM element containing the rendered shape
  * @throws {Error} If type is not a string, color is invalid, or size is not a positive number
  */
@@ -280,7 +189,9 @@ export function createShapeElement(type, color, size) {
             shapePath = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
             // True diamond shape (not just a rotated square)
             shapePath.setAttribute('points', '50,5 95,50 50,95 5,50');
-            break; case 'octagon':
+            break;
+
+        case 'octagon':
             shapePath = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
             // Regular octagon with symmetrical angles
             shapePath.setAttribute('points', '30,5 70,5 95,30 95,70 70,95 30,95 5,70 5,30');
@@ -325,49 +236,15 @@ export function createShapeElement(type, color, size) {
     svg.appendChild(shapePath);
     shapeContainer.appendChild(svg);
 
-    // Add debugging information for development
-    console.log(`Created shape: ${type}, color: ${color}, size: ${baseSize}`);
-
     return shapeContainer;
 }
 
 /**
  * Renders all shapes from gameState onto the game board.
- * 
- * This function is like a stage manager in a theater - it takes all the shapes
- * that have been planned and actually puts them on stage (the game board) where
- * players can see and interact with them.
- * 
- * The function is designed to be efficient and safe:
- * - It only creates DOM elements for shapes that don't have them yet
- * - It updates positions and styling for all shapes
- * - It handles the case where shapes might be moving around (hard mode)
- * - It ensures all shapes are properly clickable and visible
- * 
- * Each shape gets important metadata attached:
- * - data-shape-type: For debugging and testing
- * - data-is-match: Whether this shape matches the target
- * - data-shape-color: The shape's color value
- * - Proper z-index for layering (matching shapes appear on top)
- * 
- * @example
- * // After generating shape data, render them on screen
- * generateGameShapes(10, 'circle');
- * renderShapes(); // Now players can see and click the shapes
- * 
- * // Update positions after shapes move (in hard mode)
- * updateShapePositions();
- * renderShapes(); // Refresh the display
- * 
- * @function
+ * Creates DOM elements for new shapes, attaches click handlers, and updates positions.
  * @returns {void}
  */
 export function renderShapes() {
-    // Check if the game board is empty and needs initialization
-    if (elements.gameBoard.children.length === 0) {
-        console.log("Game board is empty, initializing shapes");
-    }
-
     // Create DOM elements for shapes that don't have them yet
     gameState.shapes.forEach(shape => {
         if (!shape.element) {
@@ -402,7 +279,6 @@ export function renderShapes() {
             // Add to game board - this is where the element becomes visible
             elements.gameBoard.appendChild(shapeElement);
 
-            console.log(`Added shape to board: ${shape.type}, color: ${shape.color}, isMatch: ${shape.isMatch}`);
         }
 
         // Update position, rotation, and z-index for all shapes (including existing ones)
@@ -419,41 +295,15 @@ export function renderShapes() {
         }
     });
 
-    // Log the total number of shapes rendered for debugging
-    console.log(`Rendered a total of ${gameState.shapes.length} shapes on the game board`);
 }
 
 /**
  * Resizes the confetti canvas to match the current window dimensions.
- * 
- * The confetti animation needs to cover the entire screen to look impressive,
- * so whenever the window size changes, we need to update our canvas dimensions.
- * This function ensures the confetti canvas always perfectly overlays the
- * entire viewport.
- * 
- * Key aspects of confetti canvas setup:
- * - Fixed positioning to stay in place during scrolling
- * - Full viewport coverage (100% width and height)
- * - Pointer events disabled so clicks pass through to game elements
- * - High z-index to appear above other elements during animation
- * 
- * This function is called during initialization and whenever the window
- * is resized to maintain perfect coverage.
- * 
- * @example
- * // During game initialization
- * resizeConfettiCanvas();
- * 
- * // When window is resized
- * window.addEventListener('resize', resizeConfettiCanvas);
- * 
- * @function
+ * Sets fixed positioning and full viewport coverage for the overlay.
  * @returns {void}
- * @throws {Error} If confetti canvas element is not found
  */
 export function resizeConfettiCanvas() {
     if (!elements.confettiCanvas) {
-        console.warn('Confetti canvas element not found');
         return;
     }
 
@@ -470,7 +320,6 @@ export function resizeConfettiCanvas() {
         elements.confettiCanvas.style.height = '100%';
         elements.confettiCanvas.style.pointerEvents = 'none'; // Allow clicks to pass through
 
-        console.log(`Resized confetti canvas to ${elements.confettiCanvas.width}x${elements.confettiCanvas.height}`);
     } catch (error) {
         console.error('Failed to resize confetti canvas:', error);
         throw new Error('Could not resize confetti canvas');

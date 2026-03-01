@@ -1,0 +1,25 @@
+{
+  "name": "i-spy-a-shape",
+  "version": "1.0.0",
+  "description": "An interactive educational game to help children learn geometric shapes through fun matching challenges",
+  "author": "WebDevGuy",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webdev-guy/i-spy-a-shape"
+  },
+  "keywords": [
+    "educational",
+    "game",
+    "shapes",
+    "geometry",
+    "children",
+    "learning",
+    "vanilla-javascript",
+    "svg"
+  ],
+  "type": "module",
+  "scripts": {
+    "start": "npx http-server -p 8000 -o"
+  }
+}

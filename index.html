@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>I Spy a Shape</title>
+    <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 
@@ -49,90 +50,113 @@
         <!-- Game Setup Modal -->
         <div id="game-setup-modal" class="modal">
             <div class="modal-content">
-                <h2><img id="logo" src="images/mascot.png" alt="I Spy a Shape Logo" /></h2>
 
-                <div class="setup-section">
-                    <input type="text" id="player-name" placeholder="Enter your name">
-                </div>
+                <!-- Step 1: Welcome -->
+                <div class="wizard-step active" id="wizard-step-1">
+                    <h2><img id="logo" src="images/mascot.png" alt="I Spy a Shape Logo" /></h2>
 
-                <div class="setup-section">
-                    <h3>Difficulty Level</h3>
-                    <div class="option-buttons difficulty-options">
-                        <button class="option-btn selected" data-difficulty="easy">
-                            Easy
-                            <span class="tooltip">
-                                4-8 shapes<br>
-                                90 seconds time limit<br>
-                                Distinct colors<br>
-                                Minimal rotation<br>
-                                +5s per correct match<br>
-                                +8s for color match
-                            </span>
-                        </button>
-                        <button class="option-btn" data-difficulty="medium">
-                            Medium
-                            <span class="tooltip">
-                                6-12 shapes<br>
-                                60 seconds time limit<br>
-                                Similar colors allowed<br>
-                                More rotation<br>
-                                +3s per correct match<br>
-                                +5s for color match
-                            </span>
-                        </button>
-                        <button class="option-btn" data-difficulty="hard">
-                            Hard
-                            <span class="tooltip">
-                                10-18 shapes<br>
-                                45 seconds time limit<br>
-                                Similar colors<br>
-                                Full rotation<br>
-                                +2s per correct match<br>
-                                +3s for color match
-                            </span>
-                        </button>
+                    <div class="setup-section">
+                        <input type="text" id="player-name" placeholder="Enter your name">
+                    </div>
+
+                    <div class="wizard-nav">
+                        <button id="wizard-next-btn" class="wizard-btn wizard-btn-primary">Next</button>
+                        <button id="wizard-highscores-btn" class="wizard-btn wizard-btn-secondary">High Scores</button>
                     </div>
                 </div>
 
-                <div class="setup-section">
-                    <h3>Game Mode</h3>
-                    <div class="option-buttons mode-options">
-                        <button class="option-btn selected" data-mode="classic">
-                            Classic
-                            <span class="tooltip">
-                                Standard gameplay<br>
-                                Find matching shapes<br>
-                                3 attempts per round
-                            </span>
-                        </button>
-                        <button class="option-btn" data-mode="timed">
-                            Timed
-                            <span class="tooltip">
-                                Race against the clock<br>
-                                Gain time for correct matches<br>
-                                Lose time for mistakes<br>
-                                Bonus time for color matches
-                            </span>
-                        </button>
+                <!-- Step 2: Game Settings -->
+                <div class="wizard-step" id="wizard-step-2">
+                    <div class="setup-section">
+                        <h3>Difficulty Level</h3>
+                        <div class="option-buttons difficulty-options">
+                            <button class="option-btn selected" data-difficulty="easy">
+                                Easy
+                                <span class="tooltip">
+                                    4-8 shapes<br>
+                                    90 seconds time limit<br>
+                                    Distinct colors<br>
+                                    Minimal rotation<br>
+                                    +5s per correct match<br>
+                                    +8s for color match
+                                </span>
+                            </button>
+                            <button class="option-btn" data-difficulty="medium">
+                                Medium
+                                <span class="tooltip">
+                                    6-12 shapes<br>
+                                    60 seconds time limit<br>
+                                    Similar colors allowed<br>
+                                    More rotation<br>
+                                    +3s per correct match<br>
+                                    +5s for color match
+                                </span>
+                            </button>
+                            <button class="option-btn" data-difficulty="hard">
+                                Hard
+                                <span class="tooltip">
+                                    10-18 shapes<br>
+                                    45 seconds time limit<br>
+                                    Similar colors<br>
+                                    Full rotation<br>
+                                    +2s per correct match<br>
+                                    +3s for color match
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="setup-section">
+                        <h3>Game Mode</h3>
+                        <div class="option-buttons mode-options">
+                            <button class="option-btn selected" data-mode="classic">
+                                Classic
+                                <span class="tooltip">
+                                    Standard gameplay<br>
+                                    Find matching shapes<br>
+                                    3 attempts per round
+                                </span>
+                            </button>
+                            <button class="option-btn" data-mode="timed">
+                                Timed
+                                <span class="tooltip">
+                                    Race against the clock<br>
+                                    Gain time for correct matches<br>
+                                    Lose time for mistakes<br>
+                                    Bonus time for color matches
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="setup-section">
+                        <h3>Number of Shapes</h3>
+                        <div class="shape-quantity">
+                            <button id="decrease-shapes">-</button>
+                            <span id="shape-quantity-display">10</span>
+                            <button id="increase-shapes">+</button>
+                        </div>
+                    </div>
+
+                    <div class="wizard-nav wizard-nav-split">
+                        <button id="wizard-back-settings-btn" class="wizard-btn wizard-btn-back">Back</button>
+                        <button id="start-game-btn">Start Game</button>
                     </div>
                 </div>
 
-                <div class="setup-section">
-                    <h3>Number of Shapes</h3>
-                    <div class="shape-quantity">
-                        <button id="decrease-shapes">-</button>
-                        <span id="shape-quantity-display">10</span>
-                        <button id="increase-shapes">+</button>
+                <!-- Step 3: Leaderboard -->
+                <div class="wizard-step" id="wizard-step-3">
+                    <div class="high-scores-section">
+                        <div id="high-scores-list">
+                            <!-- High scores will be populated here -->
+                        </div>
+                    </div>
+
+                    <div class="wizard-nav">
+                        <button id="wizard-back-scores-btn" class="wizard-btn wizard-btn-back">Back</button>
                     </div>
                 </div>
 
-                <button id="start-game-btn">Start Game</button>
-
-                <div class="high-scores-section">
-                    <div id="high-scores-list">
-                        <!-- High scores will be populated here -->
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -143,6 +167,9 @@
             <button id="restart-button">Try Again</button>
             <button id="back-to-menu-button">Back to Menu</button>
         </div>
+
+        <!-- Mute toggle -->
+        <button id="mute-button" class="mute-button" aria-label="Mute sound effects">🔊</button>
 
         <!-- Confetti canvas for animations -->
         <canvas id="confetti-canvas"></canvas>

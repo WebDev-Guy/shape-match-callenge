@@ -1,44 +1,15 @@
 /**
- * Game State Management Module
- * 
- * Think of this as the game's memory - it remembers everything that's happening
- * during gameplay. While the player is having fun clicking shapes, this module
- * is quietly keeping track of their score, how many attempts they have left,
- * what the target shape is, and much more.
- * 
- * This is a classic example of the "single source of truth" pattern. Instead of
- * having game information scattered across different files (which would be a
- * nightmare to debug!), we keep everything in one place. Any part of the game
- * that needs to know "what's the current score?" or "is the game over?" can
- * look here.
- * 
- * The reset function is particularly important - it's like hitting the refresh
- * button on the game state, cleaning up everything for a fresh start while
- * preserving the player's preferences.
- * 
- * @fileoverview Centralized game state management and reset functionality
- * @author Game Development Team
+ * Centralized game state management and reset functionality.
+ * @fileoverview Manages all game state in a single source of truth
+ * @author WebDevGuy
  * @version 1.0.0
  */
 
 /**
- * The master game state object - the brain that remembers everything!
- * 
- * This object is the central nervous system of our game. Every piece of information
- * that changes during gameplay lives here. Think of it as a shared notebook that
- * all parts of the game can read from and write to.
- * 
- * We've organized the properties into logical groups:
- * - Game status (active, over, score, attempts)
- * - Target and shapes (what the player needs to find)
- * - Player settings (difficulty, mode, preferences)
- * - High scores and player identity
- * - Technical stuff (timers, animations)
- * 
- * Some properties have "previous" versions (like previousScore) because we use
- * these to trigger animations when values change. It's a neat trick that makes
- * the UI feel more alive!
- * 
+ * Central game state object that tracks all gameplay data, player settings,
+ * and session configuration. All parts of the game read from and write to
+ * this shared state.
+ *
  * @type {Object}
  * @property {boolean} isGameActive - Whether a game round is currently running
  * @property {number} score - Player's current score (number of correct matches)
@@ -87,16 +58,14 @@ const gameState = {
 
     // Player data
     playerName: '',
-    highScores: {
-        easy: [],
-        medium: [],
-        hard: []
-    },
 
     // Current session settings
     currentDifficulty: 'easy',
     currentMode: 'classic',
     shapesQuantity: 10,
+
+    // Audio settings
+    muted: false,
 
     // Game flow control
     gameOver: false,
@@ -106,39 +75,8 @@ const gameState = {
 };
 
 /**
- * Resets the game state to prepare for a fresh game.
- * 
- * This function is like hitting the "New Game" button - it cleans up all the
- * temporary game data while preserving the player's preferences. It's called
- * whenever we need to start fresh: new game, restart, or returning to menu.
- * 
- * Here's what gets reset vs. what stays:
- * 
- * GETS RESET (temporary game data):
- * - Score and attempts (back to zero)
- * - Target shape and board shapes
- * - Timers and animations
- * - Game over flags
- * 
- * STAYS THE SAME (player preferences):
- * - Chosen difficulty and game mode
- * - Number of shapes preference
- * - Player name
- * - High scores
- * 
- * This approach means players don't have to re-enter their settings every time
- * they start a new game, which makes for a much smoother experience.
- * 
- * @example
- * // When player clicks "Restart Game"
- * resetGameState();
- * startNewGame();
- * 
- * // When returning to main menu
- * resetGameState();
- * showSetupModal();
- * 
- * @function
+ * Resets temporary game data for a fresh round while preserving
+ * player preferences (difficulty, mode, name, high scores).
  * @returns {void}
  */
 export function resetGameState() {
@@ -151,6 +89,9 @@ export function resetGameState() {
 
     // Clear timer data
     gameState.timer = 0;
+    if (gameState.timerInterval) {
+        clearInterval(gameState.timerInterval);
+    }
     gameState.timerInterval = null;
 
     // Clear current round data
@@ -160,18 +101,22 @@ export function resetGameState() {
 
     // Reset game flow flags
     gameState.gameOver = false;
+    if (gameState.animationFrameId) {
+        cancelAnimationFrame(gameState.animationFrameId);
+    }
     gameState.animationFrameId = null;
     gameState.timeRemaining = 0;
+    if (gameState.confettiAnimationId) {
+        cancelAnimationFrame(gameState.confettiAnimationId);
+    }
     gameState.confettiAnimationId = null;
 
     // Preserve user preferences - these should NOT be reset:
-    // - gameState.currentDifficulty 
-    // - gameState.currentMode 
+    // - gameState.currentDifficulty
+    // - gameState.currentMode
     // - gameState.shapesQuantity
     // - gameState.playerName
-    // - gameState.highScores
 
-    console.log('Game state reset - ready for new game');
 }
 
 export default gameState;

@@ -1,30 +1,13 @@
 /**
- * Event Handling and User Interface Module
- * 
- * This module is the bridge between the player and the game - it listens for
- * every button click, key press, and interaction, then translates those into
- * meaningful game actions. Think of it as the game's nervous system, constantly
- * monitoring for player input and responding appropriately.
- * 
- * The event system is designed with user experience as the top priority:
- * - Immediate visual feedback for all interactions
- * - Smooth transitions between game states
- * - Robust error handling that guides users to success
- * - Accessibility features for screen reader users
- * - Responsive behavior that adapts to different screen sizes
- * 
- * This module also manages the complex modal system that handles game setup,
- * high scores, and game over screens. Each modal has its own lifecycle and
- * state management to ensure a polished user experience.
- * 
- * @fileoverview Event listeners, UI interactions, and modal management
- * @author Game Development Team
+ * Event listeners, UI interactions, and modal management.
+ * @fileoverview Event handling and user interface module for the game
+ * @author WebDevGuy
  * @version 1.0.0
  */
 
 // Game event handlers and UI interactions
 import gameState, { resetGameState } from './gameState.js';
-import { elements, initAudioSettings } from './elements.js';
+import { elements } from './elements.js';
 import { gameConfig } from './config.js';
 import { capitalize } from './utils.js';
 import {
@@ -35,37 +18,17 @@ import {
     stopTimer,
     endGame,
     hideGameOverScreen,
-    loadHighScores,
     startTimer,
     loadHighScoresByMode,
     generateGameShapes,
-    ensureGameBoardDimensions
+    ensureGameBoardDimensions,
+    updateScoreDisplay
 } from './gameLogic.js';
 import { clearGameBoard, resizeConfettiCanvas } from './rendering.js';
 
 /**
  * Initializes all event listeners for the game interface.
- * 
- * This function is like setting up the control panel of a spaceship - it connects
- * every button and control to its corresponding action. We call this once during
- * game initialization to wire up all the interactive elements.
- * 
- * The event listeners are organized by functionality:
- * - Game control buttons (restart, quit, back to menu)
- * - Setup and configuration (difficulty, mode, shape quantity)
- * - Responsive design (window resize handling)
- * - Modal dialogs (confirmations and setup)
- * 
- * Each event listener includes proper error handling and user feedback to ensure
- * a smooth experience even when things go wrong.
- * 
- * @example
- * // Called during game initialization
- * document.addEventListener('DOMContentLoaded', () => {
- *   initEventListeners(); // Now all buttons work!
- * });
- * 
- * @function
+ * Wires up game controls, setup configuration, resize handling, and modal dialogs.
  * @returns {void}
  * @throws {Error} If critical DOM elements are missing
  */
@@ -85,19 +48,9 @@ export function initEventListeners() {
                 // Update game state
                 gameState.currentDifficulty = button.dataset.difficulty;
 
-                // Apply difficulty-specific settings
+                // Apply difficulty-specific settings (clamps shapesQuantity to valid range)
                 applyDifficultySettings();
 
-                // Auto-adjust shape quantities for new difficulty
-                if (gameState.currentDifficulty === 'medium') {
-                    gameState.shapesQuantity = 15;
-                    elements.shapeQuantityDisplay.textContent = gameState.shapesQuantity;
-                } else if (gameState.currentDifficulty === 'hard') {
-                    gameState.shapesQuantity = 20;
-                    elements.shapeQuantityDisplay.textContent = gameState.shapesQuantity;
-                }
-
-                console.log(`Difficulty changed to: ${gameState.currentDifficulty}`);
             });
         });
 
@@ -121,23 +74,61 @@ export function initEventListeners() {
                 // Update tooltips to match selected mode
                 updateDifficultyTooltips(gameState.currentMode);
 
-                console.log(`Game mode changed to: ${gameState.currentMode}`);
             });
         });
 
-        // Shape quantity adjustment controls
+        // Shape quantity adjustment controls (bounds follow selected difficulty)
         elements.decreaseShapesBtn.addEventListener('click', () => {
-            if (gameState.shapesQuantity > 3) {
+            const bounds = gameConfig.difficulty[gameState.currentDifficulty].shapesCount;
+            if (gameState.shapesQuantity > bounds.min) {
                 gameState.shapesQuantity--;
                 elements.shapeQuantityDisplay.textContent = gameState.shapesQuantity;
             }
         });
 
         elements.increaseShapesBtn.addEventListener('click', () => {
-            if (gameState.shapesQuantity < 20) {
+            const bounds = gameConfig.difficulty[gameState.currentDifficulty].shapesCount;
+            if (gameState.shapesQuantity < bounds.max) {
                 gameState.shapesQuantity++;
                 elements.shapeQuantityDisplay.textContent = gameState.shapesQuantity;
             }
+        });
+
+        // Mute toggle
+        elements.muteButton.addEventListener('click', () => {
+            gameState.muted = !gameState.muted;
+            elements.muteButton.textContent = gameState.muted ? '🔇' : '🔊';
+            elements.muteButton.classList.toggle('muted', gameState.muted);
+            elements.muteButton.setAttribute('aria-label',
+                gameState.muted ? 'Unmute sound effects' : 'Mute sound effects'
+            );
+        });
+
+        // Wizard navigation
+        elements.wizardNextBtn.addEventListener('click', () => {
+            const playerNameValue = elements.playerNameInput.value.trim();
+            if (!playerNameValue) {
+                const errorMessage = document.getElementById('name-error-message') || createNameErrorMessage();
+                errorMessage.style.display = 'block';
+                elements.playerNameInput.focus();
+                return;
+            }
+            const errorMessage = document.getElementById('name-error-message');
+            if (errorMessage) errorMessage.style.display = 'none';
+            goToWizardStep(2);
+        });
+
+        elements.wizardHighScoresBtn.addEventListener('click', () => {
+            displayHighScores();
+            goToWizardStep(3);
+        });
+
+        elements.wizardBackSettingsBtn.addEventListener('click', () => {
+            goToWizardStep(1);
+        });
+
+        elements.wizardBackScoresBtn.addEventListener('click', () => {
+            goToWizardStep(1);
         });
 
         // Game start and quit controls
@@ -159,7 +150,6 @@ export function initEventListeners() {
         // Responsive design: handle window resize
         window.addEventListener('resize', handleWindowResize);
 
-        console.log('All event listeners initialized successfully');
     } catch (error) {
         console.error('Failed to initialize event listeners:', error);
         throw new Error('Critical UI elements are missing - cannot initialize game');
@@ -167,32 +157,20 @@ export function initEventListeners() {
 }
 
 /**
+ * Switches the wizard to the specified step (1, 2, or 3).
+ * @param {number} stepNumber - The step to show
+ * @returns {void}
+ */
+function goToWizardStep(stepNumber) {
+    const steps = [elements.wizardStep1, elements.wizardStep2, elements.wizardStep3];
+    steps.forEach((step, i) => {
+        step.classList.toggle('active', i + 1 === stepNumber);
+    });
+}
+
+/**
  * Displays the game setup modal for player configuration.
- * 
- * This function is like rolling out the red carpet for new players - it presents
- * them with a beautiful, organized interface where they can customize their
- * game experience. The setup modal is the first thing players see, so it needs
- * to be welcoming, intuitive, and informative.
- * 
- * The function performs a complete reset and initialization:
- * - Cleans up any ongoing games or animations
- * - Resets the game state while preserving user preferences
- * - Updates the high scores display with latest data
- * - Ensures all modal elements are properly visible
- * 
- * This is also called when players want to return to the main menu from an
- * active game, providing a clean transition back to the starting point.
- * 
- * @example
- * // When game first loads
- * document.addEventListener('DOMContentLoaded', () => {
- *   showSetupModal(); // Welcome screen appears
- * });
- * 
- * // When player clicks "Back to Menu"
- * backToMenuButton.addEventListener('click', showSetupModal);
- * 
- * @function
+ * Cleans up any active game, resets state, and shows the setup screen with updated high scores.
  * @returns {void}
  */
 export function showSetupModal() {
@@ -213,61 +191,19 @@ export function showSetupModal() {
     // Show the setup modal with updated information
     elements.setupModal.classList.remove('hidden');
 
-    // Refresh the high scores display with latest data
-    displayHighScores();
+    // Reset wizard to step 1
+    goToWizardStep(1);
 
-    console.log('Setup modal displayed - ready for player configuration');
 }
 
 /**
- * Initiates a new game from the setup modal with validation.
- * 
- * This function is the gatekeeper between setup and gameplay - it ensures
- * everything is configured correctly before allowing the game to start. It
- * performs thorough validation and provides clear feedback when things aren't
- * quite right.
- * 
- * The validation process includes:
- * - Player name presence and validity
- * - Graceful error handling with user-friendly messages
- * - Focus management for accessibility
- * - Smooth modal transitions
- * 
- * Only after all validation passes does it hand control over to the main
- * game startup process.
- * 
- * @example
- * // Called when player clicks "Start Game"
- * startGameBtn.addEventListener('click', startGameFromSetup);
- * 
- * @function
- * @returns {void} Either starts the game or shows validation errors
+ * Initiates a new game from the setup modal.
+ * Name was already validated on wizard step 1.
+ * @returns {void}
  */
 export function startGameFromSetup() {
-    // Validate player name input
-    const playerNameValue = elements.playerNameInput.value.trim();
-
-    // Check if player name is empty or invalid
-    if (!playerNameValue) {
-        // Show helpful error message
-        const errorMessage = document.getElementById('name-error-message') || createNameErrorMessage();
-        errorMessage.style.display = 'block';
-
-        // Focus on the input field for immediate correction
-        elements.playerNameInput.focus();
-
-        console.log('Game start blocked: Player name is required');
-        return; // Don't proceed with game startup
-    }
-
-    // Hide any existing error messages
-    const errorMessage = document.getElementById('name-error-message');
-    if (errorMessage) {
-        errorMessage.style.display = 'none';
-    }
-
-    // Store the validated player name
-    gameState.playerName = playerNameValue;
+    // Store the player name (already validated on step 1)
+    gameState.playerName = elements.playerNameInput.value.trim();
 
     // Smooth transition: hide setup modal
     elements.setupModal.classList.add('hidden');
@@ -275,29 +211,11 @@ export function startGameFromSetup() {
     // Start the actual game
     startGame();
 
-    console.log(`Game starting for player: ${gameState.playerName}`);
 }
 
 /**
  * Creates a dynamic error message element for player name validation.
- * 
- * This function creates a user-friendly error message that appears when players
- * try to start the game without entering their name. The message is styled
- * consistently with the rest of the UI and positioned logically near the
- * input field.
- * 
- * The error message uses accessible design principles:
- * - Clear, non-threatening language
- * - Appropriate color contrast for visibility
- * - Positioned near the related input for context
- * - Hidden by default to avoid visual clutter
- * 
- * @example
- * // Usually called internally when validation fails
- * const errorMessage = createNameErrorMessage();
- * errorMessage.style.display = 'block'; // Show the error
- * 
- * @function
+ * Inserts a styled error message after the player name input field.
  * @returns {HTMLElement} The created error message element
  */
 export function createNameErrorMessage() {
@@ -317,39 +235,12 @@ export function createNameErrorMessage() {
         elements.playerNameInput.nextSibling
     );
 
-    console.log('Name error message element created');
     return errorMessage;
 }
 
 /**
  * Starts a new game session with current settings.
- * 
- * This function is the conductor of the game startup orchestra - it coordinates
- * all the different systems to create a smooth transition from menu to gameplay.
- * Every aspect of the game needs to be properly initialized for a great
- * player experience.
- * 
- * The startup sequence includes:
- * 1. Game state initialization (score, attempts, timers)
- * 2. Visual display updates (UI elements, instructions)
- * 3. Game board preparation and dimension validation
- * 4. Mode-specific setup (timers for timed mode)
- * 5. First round generation with a small delay for smooth transitions
- * 
- * The function handles both classic and timed modes, applying the appropriate
- * settings and UI configurations for each.
- * 
- * @example
- * // Called after successful setup validation
- * startGameFromSetup() -> startGame();
- * 
- * // Can also be called directly for restarts
- * restartButton.addEventListener('click', () => {
- *   hideGameOverScreen();
- *   startGame();
- * });
- * 
- * @function
+ * Initializes game state, updates UI, configures mode-specific settings, and begins the first round.
  * @returns {void}
  */
 export function startGame() {
@@ -389,66 +280,10 @@ export function startGame() {
     setTimeout(() => {
         startNewRound();
     }, 100);
-    console.log(`Game started in ${gameState.currentMode} mode, ${gameState.currentDifficulty} difficulty`);
-}
-
-/**
- * Configures game mode-specific settings and UI elements.
- * 
- * This function handles the unique requirements of different game modes,
- * particularly the differences between classic and timed modes. It ensures
- * that the UI and game mechanics are properly configured for the selected mode.
- * 
- * @function
- * @returns {void}
- */
-export function setupGameMode() {
-    switch (gameState.currentMode) {
-        case 'timed':
-            // Set initial time from difficulty settings
-            gameState.timeRemaining = gameConfig.difficulty[gameState.currentDifficulty].timeLimit;
-
-            // Show timer display
-            elements.timerDisplay.classList.remove('hidden');
-            elements.timer.textContent = gameState.timeRemaining;
-
-            // Start timer
-            startTimer();
-            break;
-
-        case 'classic':
-        default:
-            // Standard mode - no special setup
-            // Hide timer if it was previously shown
-            elements.timerDisplay.classList.add('hidden');
-            break;
-    }
-}
-
-/**
- * Updates the score and attempts display with visual feedback.
- * 
- * This function refreshes the player's score and remaining attempts display,
- * providing visual feedback through animations and heart symbols.
- * 
- * @function
- * @returns {void}
- */
-export function updateScoreDisplay() {
-    elements.score.textContent = gameState.score;
-
-    // Update hearts display based on attempts left
-    const heartSymbol = '❤️';
-    elements.attempts.textContent = heartSymbol.repeat(gameState.attemptsLeft);
 }
 
 /**
  * Restarts the current game with the same settings.
- * 
- * This function provides a quick restart option for players who want to
- * try again with the same configuration.
- * 
- * @function
  * @returns {void}
  */
 export function restartGame() {
@@ -461,55 +296,43 @@ export function restartGame() {
 
 /**
  * Handles window resize events for responsive design.
- * 
- * This function ensures the game adapts properly to window size changes,
- * updating visual elements and repositioning shapes as needed.
- * 
- * @function
+ * Resizes the confetti canvas and proportionally repositions existing shapes.
  * @returns {void}
  */
 export function handleWindowResize() {
-    // Resize confetti canvas
     resizeConfettiCanvas();
 
-    // If we're in the middle of a game, regenerate the shapes to fit the new window size
+    // Proportionally reposition existing shapes to fit the new board dimensions
     if (!gameState.gameOver && gameState.shapes.length > 0) {
-        // Preserve the current target shape type
-        const currentTargetShape = gameState.targetShape;
+        const oldWidth = gameState._boardWidth || elements.gameBoard.clientWidth;
+        const oldHeight = gameState._boardHeight || elements.gameBoard.clientHeight;
+        const newWidth = elements.gameBoard.clientWidth;
+        const newHeight = elements.gameBoard.clientHeight;
 
-        // Clear and regenerate with same target type but new positions
-        clearGameBoard();
-        generateGameShapes(gameState.shapesQuantity, currentTargetShape);
+        if (oldWidth > 0 && oldHeight > 0 && newWidth > 0 && newHeight > 0) {
+            const scaleX = newWidth / oldWidth;
+            const scaleY = newHeight / oldHeight;
+
+            gameState.shapes.forEach(shape => {
+                shape.x = Math.max(0, Math.min(shape.x * scaleX, newWidth - shape.size));
+                shape.y = Math.max(0, Math.min(shape.y * scaleY, newHeight - shape.size));
+
+                if (shape.element) {
+                    shape.element.style.left = `${shape.x}px`;
+                    shape.element.style.top = `${shape.y}px`;
+                }
+            });
+        }
+
+        // Store current dimensions for next resize
+        gameState._boardWidth = newWidth;
+        gameState._boardHeight = newHeight;
     }
 }
 
 /**
- * Displays and manages the high scores leaderboard interface.
- * 
- * This function creates a sophisticated, tabbed leaderboard interface that
- * showcases player achievements across different game modes. It's like building
- * a hall of fame that celebrates the best performances while motivating
- * players to improve.
- * 
- * The leaderboard system includes:
- * - Tabbed interface for Classic and Timed modes
- * - Dynamic content loading based on stored scores
- * - Interactive tab switching with visual feedback
- * - Responsive design that works on all screen sizes
- * - Proper handling of empty leaderboards
- * 
- * The function completely rebuilds the leaderboard each time it's called,
- * ensuring that new scores are always reflected and the interface is
- * consistent with the current game state.
- * 
- * @example
- * // Called when showing setup modal
- * showSetupModal() -> displayHighScores();
- * 
- * // Called after saving a new high score
- * saveHighScore() -> displayHighScores();
- * 
- * @function
+ * Displays and manages the high scores leaderboard with tabbed Classic/Timed interface.
+ * Rebuilds the leaderboard each time to reflect the latest scores.
  * @returns {void}
  */
 export function displayHighScores() {
@@ -584,32 +407,11 @@ export function displayHighScores() {
     const timedScores = loadHighScoresByMode('timed');
     displayModeScores(timedScores, elements.timedScoresContainer);
 
-    console.log('High scores display updated');
 }
 
 /**
- * Displays scores for a specific game mode in the provided container.
- * 
- * This helper function renders the actual score entries for either Classic
- * or Timed mode. It creates a beautiful, organized table-like layout with
- * special styling for top performers.
- * 
- * The function handles both empty and populated leaderboards gracefully:
- * - Empty leaderboards show an encouraging "No high scores yet!" message
- * - Populated leaderboards display a professional ranking table
- * - Top 3 positions get special gold/silver/bronze styling
- * - All entries show rank, player name, score, and difficulty
- * 
- * @example
- * // Display classic mode scores
- * const classicScores = loadHighScoresByMode('classic');
- * displayModeScores(classicScores, classicContainer);
- * 
- * // Display timed mode scores
- * const timedScores = loadHighScoresByMode('timed');
- * displayModeScores(timedScores, timedContainer);
- * 
- * @function
+ * Renders score entries for a specific game mode into the provided container.
+ * Handles empty leaderboards and applies gold/silver/bronze styling to top 3.
  * @param {Array} scores - Array of score objects to display
  * @param {HTMLElement} container - DOM element to render scores into
  * @returns {void}
@@ -647,45 +449,37 @@ export function displayModeScores(scores, container) {
         if (index === 1) scoreItem.classList.add('silver');
         if (index === 2) scoreItem.classList.add('bronze');
 
-        // Format the score entry with proper data
-        scoreItem.innerHTML = `
-            <span class="rank-col">${index + 1}</span>
-            <span class="name-col">${score.name}</span>
-            <span class="score-col">${score.score}</span>
-            <span class="details-col">${capitalize(score.difficulty)}</span>
-        `;
+        // Build score entry using textContent to prevent XSS
+        const rankSpan = document.createElement('span');
+        rankSpan.className = 'rank-col';
+        rankSpan.textContent = index + 1;
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'name-col';
+        nameSpan.textContent = score.name;
+
+        const scoreSpan = document.createElement('span');
+        scoreSpan.className = 'score-col';
+        scoreSpan.textContent = score.score;
+
+        const detailsSpan = document.createElement('span');
+        detailsSpan.className = 'details-col';
+        detailsSpan.textContent = capitalize(score.difficulty);
+
+        scoreItem.appendChild(rankSpan);
+        scoreItem.appendChild(nameSpan);
+        scoreItem.appendChild(scoreSpan);
+        scoreItem.appendChild(detailsSpan);
 
         container.appendChild(scoreItem);
     });
 
-    console.log(`Displayed ${scores.length} scores in leaderboard`);
 }
 
 /**
- * Updates difficulty tooltips based on the selected game mode.
- * 
- * This function ensures that the helpful tooltip information stays relevant
- * to the player's current mode selection. Since Classic and Timed modes have
- * different rules and mechanics, the tooltips need to reflect these differences.
- * 
- * The function updates two sets of tooltips:
- * - Difficulty button tooltips (show what each difficulty level means)
- * - Mode button tooltips (explain the differences between Classic and Timed)
- * 
- * Tooltips are crucial for onboarding new players and helping them understand
- * what to expect from their selections.
- * 
- * @example
- * // Called when player switches to timed mode
- * gameState.currentMode = 'timed';
- * updateDifficultyTooltips('timed'); // Tooltips now show timed mode rules
- * 
- * // Called when player switches to classic mode
- * gameState.currentMode = 'classic';
- * updateDifficultyTooltips('classic'); // Tooltips show classic mode rules
- * 
- * @function
- * @param {string} mode - The game mode to display tooltips for ('classic' or 'timed')
+ * Updates difficulty and mode tooltips based on the selected game mode.
+ * Ensures tooltip content reflects the rules for Classic vs Timed mode.
+ * @param {string} mode - The game mode ('classic' or 'timed')
  * @returns {void}
  * @throws {Error} If mode is not a valid game mode string
  */
@@ -721,20 +515,10 @@ export function updateDifficultyTooltips(mode) {
         }
     });
 
-    console.log(`Updated tooltips for ${mode} mode`);
 }
 
 /**
- * Shows the end game confirmation dialog.
- * 
- * This function presents players with a confirmation dialog when they try to
- * quit an active game. This prevents accidental quits and gives players a
- * chance to continue if they clicked quit by mistake.
- * 
- * While the dialog is shown, the game is paused to prevent any unfair
- * time loss or unwanted game state changes.
- * 
- * @function
+ * Shows the end game confirmation dialog, pausing the game while displayed.
  * @returns {void}
  */
 export function showEndGameConfirmation() {
@@ -747,25 +531,10 @@ export function showEndGameConfirmation() {
     document.getElementById('confirmation-overlay').style.display = 'block';
     document.getElementById('end-game-dialog').style.display = 'block';
 
-    console.log('End game confirmation dialog shown');
 }
 
 /**
- * Hides the end game confirmation dialog and resumes gameplay.
- * 
- * This function is called when players cancel the quit action or after they
- * confirm they want to end the game. It cleans up the modal interface and
- * resumes the game exactly where it left off.
- * 
- * The function intelligently resumes only the appropriate game systems:
- * - Timers are only restarted in timed mode
- * - Shape movement is only restarted if the game isn't over
- * - The game state remains unchanged (no progress is lost)
- * 
- * This ensures that canceling the quit dialog returns players to exactly
- * the same game state they were in before.
- * 
- * @function
+ * Hides the end game confirmation dialog and resumes gameplay if the game is still active.
  * @returns {void}
  */
 export function hideEndGameConfirmation() {
@@ -783,5 +552,4 @@ export function hideEndGameConfirmation() {
         }
     }
 
-    console.log('End game confirmation dialog hidden, game resumed');
 }

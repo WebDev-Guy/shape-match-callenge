@@ -1,25 +1,7 @@
 /**
- * Game Logic and Mechanics Module
- * 
- * Welcome to the brain of our shape-matching game! This module contains all the
- * core logic that makes the game actually work. If the rendering module is the
- * artist, this module is the game designer - it knows all the rules, manages
- * the difficulty progression, and orchestrates the entire gameplay experience.
- * 
- * This module handles some pretty complex stuff:
- * - Intelligent shape generation that ensures winnable puzzles
- * - Difficulty scaling that keeps players engaged without frustrating them
- * - Smooth animations and feedback systems
- * - Score tracking and high score management
- * - Timer management for different game modes
- * 
- * The shape generation algorithm is particularly sophisticated - it uses grid-based
- * positioning to ensure shapes are well-distributed, guarantees at least one
- * correct match is always present, and balances the challenge appropriately for
- * each difficulty level.
- * 
+ * Core game mechanics, shape generation, and gameplay logic.
  * @fileoverview Core game mechanics, shape generation, and gameplay logic
- * @author Game Development Team
+ * @author WebDevGuy
  * @version 1.0.0
  */
 
@@ -32,29 +14,7 @@ import { clearGameBoard, createTargetShape, renderShapes, resizeConfettiCanvas }
 
 /**
  * Gets the available shapes for the current difficulty level.
- * 
- * This function is like a curator deciding which shapes to include in an art
- * exhibition. It starts with the basic shapes that everyone should know, then
- * adds more complex shapes as the difficulty increases.
- * 
- * The progression is carefully designed:
- * - Easy: Just the basics (circle, square, triangle, rectangle)
- * - Medium: Adds intermediate shapes (pentagon, hexagon, oval, diamond)
- * - Hard: Includes challenging shapes (octagon, star, heart, trapezoid)
- * 
- * This gradual progression helps players build their shape recognition skills
- * without being overwhelmed by too many options at once.
- * 
- * @example
- * // In easy mode
- * gameState.currentDifficulty = 'easy';
- * const shapes = getAvailableShapes(); // ['circle', 'square', 'triangle', 'rectangle']
- * 
- * // In hard mode
- * gameState.currentDifficulty = 'hard';
- * const shapes = getAvailableShapes(); // All 12 shape types
- * 
- * @function
+ * Progressively adds more shapes as difficulty increases.
  * @returns {string[]} Array of shape names available for current difficulty
  */
 export function getAvailableShapes() {
@@ -75,29 +35,7 @@ export function getAvailableShapes() {
 
 /**
  * Applies difficulty-specific settings to the current game session.
- * 
- * This function is like a game director adjusting all the stage settings before
- * a performance. It takes the current difficulty level and makes sure all the
- * game parameters are set correctly.
- * 
- * Key adjustments made:
- * - Shape count: Ensures the player's preference is within difficulty limits
- * - UI updates: Changes the instruction text to explain matching rules
- * - Display updates: Shows the current shape quantity setting
- * 
- * The function respects player preferences when possible - if someone wants
- * 10 shapes in easy mode but the limit is 8, we cap it at 8. But if they
- * want 6 shapes and the minimum is 4, we keep their preference.
- * 
- * @example
- * // Player selects hard difficulty
- * gameState.currentDifficulty = 'hard';
- * gameState.shapesQuantity = 25; // Player wants lots of shapes
- * applyDifficultySettings();
- * // shapesQuantity is now capped at 18 (hard mode maximum)
- * // UI now shows "Find this shape: (Shape AND Color)"
- * 
- * @function
+ * Adjusts shape count limits, UI text, and display values.
  * @returns {void}
  */
 export function applyDifficultySettings() {
@@ -120,47 +58,11 @@ export function applyDifficultySettings() {
         elements.findShapeText.textContent = 'Find this shape: (Shape AND Color)';
     }
 
-    console.log(`Applied ${gameState.currentDifficulty} difficulty settings: ${gameState.shapesQuantity} shapes`);
 }
 
 /**
  * Generates a set of randomly positioned shapes for the game board.
- * 
- * This is one of the most complex and important functions in our entire game!
- * It's responsible for creating puzzles that are challenging but always solvable.
- * Think of it as a puzzle designer that needs to balance randomness with fairness.
- * 
- * The function performs several sophisticated tasks:
- * 
- * 1. **Responsive Sizing**: Adjusts shape sizes based on screen size so the game
- *    feels natural on any device from phones to large monitors.
- * 
- * 2. **Grid-Based Positioning**: Uses an intelligent grid system to distribute
- *    shapes evenly across the screen, preventing clustering and ensuring all
- *    shapes are visible and clickable.
- * 
- * 3. **Guaranteed Solution**: Always ensures at least one correct match exists,
- *    with smart placement to avoid making it too obvious or too hidden.
- * 
- * 4. **Difficulty-Appropriate Challenge**: Adjusts color schemes, shape variety,
- *    and positioning complexity based on the selected difficulty level.
- * 
- * 5. **Visual Balance**: Manages z-index layering so matching shapes tend to be
- *    visible while still maintaining visual interest through overlapping.
- * 
- * The algorithm is designed to be robust - it handles edge cases like small screens,
- * unusual target shapes, and ensures the game remains playable even when things
- * go wrong (like running out of grid positions).
- * 
- * @example
- * // Generate 10 shapes with 'circle' as the target
- * generateGameShapes(10, 'circle');
- * // Now gameState.shapes contains 10 shape objects with guaranteed circle match
- * 
- * // Generate shapes for current difficulty and quantity settings
- * generateGameShapes(gameState.shapesQuantity, gameState.targetShape);
- * 
- * @function
+ * Uses grid-based positioning, guarantees at least one correct match, and scales to screen size.
  * @param {number} count - Number of shapes to generate (will be adjusted for screen size)
  * @param {string} targetShapeType - The shape type that players need to find
  * @returns {void} Populates gameState.shapes array and renders shapes on board
@@ -183,11 +85,12 @@ export function generateGameShapes(count, targetShapeType) {
     const boardWidth = elements.gameBoard.clientWidth;
     const boardHeight = elements.gameBoard.clientHeight;
 
-    console.log(`Game board dimensions: ${boardWidth}x${boardHeight}`);
+    // Store board dimensions for proportional resize handling
+    gameState._boardWidth = boardWidth;
+    gameState._boardHeight = boardHeight;
 
     // Safety check - ensure the board has reasonable dimensions
     if (boardWidth < 100 || boardHeight < 100) {
-        console.warn("Game board dimensions are too small, forcing minimum size");
         // Force minimum dimensions if board is too small
         setTimeout(() => {
             elements.gameBoard.style.minHeight = "300px";
@@ -209,7 +112,6 @@ export function generateGameShapes(count, targetShapeType) {
 
     // Fallback color selection if target color is missing
     if (!targetShapeColor) {
-        console.error("Target color not found in gameState, using fallback");
         gameState.targetColor = getRandomItem(gameConfig.colors);
     }
 
@@ -256,10 +158,6 @@ export function generateGameShapes(count, targetShapeType) {
     const boardArea = boardWidth * boardHeight;
     const screenBasedMaxShapes = Math.min(count, Math.floor(boardArea / 20000));
     const adjustedCount = Math.max(5, screenBasedMaxShapes); // Never go below 5 shapes
-
-    if (adjustedCount < count) {
-        console.log(`Reduced shape count from ${count} to ${adjustedCount} based on screen size`);
-    }
 
     // Tracking variables for ensuring puzzle solvability
     let shapeMatchAdded = false;    // Has a target shape been added?
@@ -350,8 +248,6 @@ export function generateGameShapes(count, targetShapeType) {
         if (gridCells.length > 0) {
             cell = gridCells.pop(); // Take a cell from the shuffled array
         } else {
-            // Fallback to random positioning if we run out of cells
-            console.log("Ran out of grid cells, using random positioning");
             break;
         }
 
@@ -466,8 +362,6 @@ export function generateGameShapes(count, targetShapeType) {
     let hasCorrectMatch = gameState.shapes.some(shape => shape.isMatch);
 
     if (!hasCorrectMatch) {
-        console.log("No matching shape was added - adding one now");
-
         // Replace the last shape with an appropriate match
         const lastIndex = gameState.shapes.length - 1;
         const lastShape = gameState.shapes[lastIndex];
@@ -524,17 +418,11 @@ export function generateGameShapes(count, targetShapeType) {
 
     // Assign velocity for moving shapes mode if active
     if (gameState.currentDifficulty === 'hard') {
-        const diffSettings = gameConfig.difficulty[gameState.currentDifficulty];
+        const movementSettings = gameConfig.difficulty[gameState.currentDifficulty].movementSpeed;
         gameState.shapes.forEach(shape => {
-            shape.vx = getRandomNumber(
-                diffSettings.movementSpeed.min,
-                diffSettings.movementSpeed.max
-            ) * (Math.random() > 0.5 ? 1 : -1);
-
-            shape.vy = getRandomNumber(
-                diffSettings.movementSpeed.min,
-                diffSettings.movementSpeed.max
-            ) * (Math.random() > 0.5 ? 1 : -1);
+            const speedRange = movementSettings.max - movementSettings.min;
+            shape.vx = (Math.random() * speedRange + movementSettings.min) * (Math.random() > 0.5 ? 1 : -1);
+            shape.vy = (Math.random() * speedRange + movementSettings.min) * (Math.random() > 0.5 ? 1 : -1);
         });
     }
 
@@ -574,7 +462,6 @@ export function startMovingShapes() {
     function moveShapes() {
         // Check if game is over first - don't continue animation in that case
         if (gameState.gameOver) {
-            console.log('Game over detected in animation loop - stopping animation');
             stopMovingShapes();
             return;
         }
@@ -585,14 +472,12 @@ export function startMovingShapes() {
 
         // Safety check - if board dimensions are invalid, don't continue
         if (boardWidth <= 0 || boardHeight <= 0) {
-            console.warn('Invalid game board dimensions, stopping animation');
             stopMovingShapes();
             return;
         }
 
         // Move each shape
         if (!gameState.shapes || gameState.shapes.length === 0) {
-            console.warn('No shapes found, stopping animation');
             stopMovingShapes();
             return;
         }
@@ -645,7 +530,6 @@ export function startMovingShapes() {
             // Store the ID so we can cancel it later
             gameState.animationFrameId = requestAnimationFrame(moveShapes);
         } else {
-            console.log('Stopping animation - game over or no shapes');
             stopMovingShapes();
         }
     }
@@ -654,16 +538,13 @@ export function startMovingShapes() {
     if (!gameState.gameOver && gameState.shapes && gameState.shapes.length > 0) {
         // Start the first frame - subsequent frames will be requested inside moveShapes
         gameState.animationFrameId = requestAnimationFrame(moveShapes);
-    } else {
-        console.log('Not starting animation - game over or no shapes');
     }
 }
 
-// Function to stop shape movement 
+// Function to stop shape movement
 export function stopMovingShapes() {
     // Cancel any ongoing animation frame
     if (gameState.animationFrameId) {
-        console.log('Cancelling animation frame:', gameState.animationFrameId);
         cancelAnimationFrame(gameState.animationFrameId);
         gameState.animationFrameId = null;
     }
@@ -675,9 +556,6 @@ export function handleShapeClick(shape, event) {
 
     // Prevent event bubbling to avoid multiple clicks
     event.stopPropagation();
-
-    console.log('Clicked shape:', shape.type, shape.color);
-    console.log('Target shape:', gameState.targetShape, gameState.targetColor);
 
     // Check for correct match based on difficulty level
     let isCorrectMatch = false;
@@ -766,29 +644,23 @@ export function handleShapeClick(shape, event) {
 // Update the score and attempts display with hearts for lives
 export function updateScoreDisplay() {
     // Update the centered score display and add pulse animation
-    const scoreCentered = document.getElementById('score-centered');
-    if (scoreCentered) {
-        scoreCentered.textContent = gameState.score;
+    elements.score.textContent = gameState.score;
 
-        // Only add pulse animation if the score was incremented (correct match)
-        // We can check if score changed by comparing with previousScore in gameState
-        if (gameState.previousScore !== undefined && gameState.score > gameState.previousScore) {
-            // Add pulse animation class
-            scoreCentered.parentElement.classList.add('score-pulse');
+    // Only add pulse animation if the score was incremented (correct match)
+    if (gameState.previousScore !== undefined && gameState.score > gameState.previousScore) {
+        elements.score.parentElement.classList.add('score-pulse');
 
-            // Remove the class after animation completes
-            setTimeout(() => {
-                scoreCentered.parentElement.classList.remove('score-pulse');
-            }, 500);
-        }
-
-        // Store current score for next comparison
-        gameState.previousScore = gameState.score;
+        // Remove the class after animation completes
+        setTimeout(() => {
+            elements.score.parentElement.classList.remove('score-pulse');
+        }, 500);
     }
 
+    // Store current score for next comparison
+    gameState.previousScore = gameState.score;
+
     // Update hearts display for remaining attempts
-    const heartsElement = document.getElementById('hearts');
-    if (heartsElement) {
+    if (elements.attempts) {
         let heartsDisplay = '';
         // Add full hearts for remaining attempts
         for (let i = 0; i < gameState.attemptsLeft; i++) {
@@ -798,13 +670,13 @@ export function updateScoreDisplay() {
         for (let i = gameState.attemptsLeft; i < gameConfig.maxAttempts; i++) {
             heartsDisplay += '🤍';
         }
-        heartsElement.textContent = heartsDisplay;
+        elements.attempts.textContent = heartsDisplay;
 
         // Add animation effect when losing a heart
         if (gameState.previousAttempts && gameState.previousAttempts > gameState.attemptsLeft) {
-            heartsElement.classList.add('heart-pulse');
+            elements.attempts.classList.add('heart-pulse');
             setTimeout(() => {
-                heartsElement.classList.remove('heart-pulse');
+                elements.attempts.classList.remove('heart-pulse');
             }, 500);
         }
 
@@ -812,7 +684,7 @@ export function updateScoreDisplay() {
         gameState.previousAttempts = gameState.attemptsLeft;
 
         // Add aria-label for screen readers to announce attempts left
-        heartsElement.setAttribute('aria-label', `${gameState.attemptsLeft} attempts remaining`);
+        elements.attempts.setAttribute('aria-label', `${gameState.attemptsLeft} attempts remaining`);
     }
 
     // If this is the first successful match, fade out the match instructions
@@ -966,7 +838,6 @@ export function launchConfetti(x, y) {
         // Hide the canvas properly
         elements.confettiCanvas.classList.add('hidden');
 
-        console.log("Confetti animation completed");
     }
 
     // Start animation
@@ -978,19 +849,18 @@ export function launchConfetti(x, y) {
 
 // Play sound effect
 export function playSound(type) {
-    switch (type) {
-        case 'correct':
-            elements.correctSound.currentTime = 0;
-            elements.correctSound.play().catch(e => console.log('Sound play error:', e));
-            break;
-        case 'wrong':
-            elements.wrongSound.currentTime = 0;
-            elements.wrongSound.play().catch(e => console.log('Sound play error:', e));
-            break;
-        case 'gameover':
-            elements.gameoverSound.currentTime = 0;
-            elements.gameoverSound.play().catch(e => console.log('Sound play error:', e));
-            break;
+    if (gameState.muted) return;
+
+    const sounds = {
+        correct: elements.correctSound,
+        wrong: elements.wrongSound,
+        gameover: elements.gameoverSound
+    };
+
+    const sound = sounds[type];
+    if (sound) {
+        sound.currentTime = 0;
+        sound.play().catch(() => {});
     }
 }
 
@@ -1145,36 +1015,6 @@ export function loadHighScoresByMode(mode) {
     return JSON.parse(localStorage.getItem(`shapeGameHighScores_${mode}`) || '[]');
 }
 
-// Load all high scores (legacy function for backward compatibility)
-export function loadHighScores() {
-    // Try to get high scores by current mode first
-    const modeScores = loadHighScoresByMode(gameState.currentMode);
-
-    // For backward compatibility, check the old storage key
-    const legacyScores = JSON.parse(localStorage.getItem('shapeGameHighScores') || '[]');
-
-    if (modeScores.length > 0) {
-        return modeScores;
-    } else if (legacyScores.length > 0) {
-        // Migrate old scores to the new format
-        const classicScores = legacyScores.filter(score => score.mode === 'classic');
-        const timedScores = legacyScores.filter(score => score.mode === 'timed');
-
-        if (classicScores.length > 0) {
-            localStorage.setItem('shapeGameHighScores_classic', JSON.stringify(classicScores));
-        }
-
-        if (timedScores.length > 0) {
-            localStorage.setItem('shapeGameHighScores_timed', JSON.stringify(timedScores));
-        }
-
-        // Return the scores for the current mode
-        return gameState.currentMode === 'classic' ? classicScores : timedScores;
-    }
-
-    return [];
-}
-
 // Force game board to have proper dimensions
 export function ensureGameBoardDimensions() {
     // Get the game board element
@@ -1187,13 +1027,9 @@ export function ensureGameBoardDimensions() {
     // Force layout recalculation
     void gameBoard.offsetHeight;
 
-    // Log game board dimensions
-    console.log(`Enforced game board dimensions: ${gameBoard.clientWidth}x${gameBoard.clientHeight}`);
-
     // If dimensions are still problematic, set explicit dimensions
     if (gameBoard.clientWidth < 300 || gameBoard.clientHeight < 300) {
         gameBoard.style.height = '70vh';
         gameBoard.style.width = '100%';
-        console.log('Set explicit dimensions due to insufficient size');
     }
 }
